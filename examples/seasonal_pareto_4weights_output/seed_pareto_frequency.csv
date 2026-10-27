@@ -1,0 +1,17 @@
+﻿Model,Test,Weight,Pareto count,Pareto frequency
+Summer,Peak Cool,8,1,0.2
+Summer,Peak Cool,13,0,0.0
+Summer,Peak Cool,16,3,0.6
+Summer,Peak Cool,26,4,0.8
+Summer,Typical Cool,8,1,0.2
+Summer,Typical Cool,13,1,0.2
+Summer,Typical Cool,16,3,0.6
+Summer,Typical Cool,26,2,0.4
+Winter,Peak Heat,8,0,0.0
+Winter,Peak Heat,16,1,0.2
+Winter,Peak Heat,26,0,0.0
+Winter,Peak Heat,109,4,0.8
+Winter,Typical Heat,8,3,0.6
+Winter,Typical Heat,16,0,0.0
+Winter,Typical Heat,26,1,0.2
+Winter,Typical Heat,109,5,1.0

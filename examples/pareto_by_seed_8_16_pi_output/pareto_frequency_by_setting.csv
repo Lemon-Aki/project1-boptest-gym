@@ -1,0 +1,25 @@
+﻿Test,Model,Setting,Pareto_count,Seed_count,Pareto_frequency
+Peak Cool,All,16:1,2,5,0.4
+Peak Cool,All,8:1,2,5,0.4
+Peak Cool,All,PI,4,5,0.8
+Peak Cool,Summer,16:1,4,5,0.8
+Peak Cool,Summer,8:1,2,5,0.4
+Peak Cool,Summer,PI,2,5,0.4
+Peak Heat,All,16:1,0,5,0.0
+Peak Heat,All,8:1,0,5,0.0
+Peak Heat,All,PI,0,5,0.0
+Peak Heat,Winter,16:1,1,5,0.2
+Peak Heat,Winter,8:1,0,5,0.0
+Peak Heat,Winter,PI,4,5,0.8
+Typical Cool,All,16:1,3,5,0.6
+Typical Cool,All,8:1,2,5,0.4
+Typical Cool,All,PI,4,5,0.8
+Typical Cool,Summer,16:1,2,5,0.4
+Typical Cool,Summer,8:1,1,5,0.2
+Typical Cool,Summer,PI,1,5,0.2
+Typical Heat,All,16:1,0,5,0.0
+Typical Heat,All,8:1,0,5,0.0
+Typical Heat,All,PI,2,5,0.4
+Typical Heat,Winter,16:1,0,5,0.0
+Typical Heat,Winter,8:1,3,5,0.6
+Typical Heat,Winter,PI,5,5,1.0

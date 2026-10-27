@@ -14,6 +14,8 @@ import pandas as pd
 import inspect
 import json
 import os
+import time
+from datetime import datetime, timedelta
 
 from collections import OrderedDict
 from scipy import interpolate
@@ -36,7 +38,7 @@ class BoptestGymEnv(gym.Env):
     metadata = {'render.modes': ['console']}
 
     def __init__(self, 
-                 url                = 'http://127.0.0.1',
+                 url                = 'http://127.0.0.1:80',
                  testcase           = 'bestest_hydronic_heat_pump',
                  actions            = ['oveHeaPumY_u'],
                  observations       = {'reaTZon_y':(280.,310.)}, 
@@ -465,6 +467,7 @@ class BoptestGymEnv(gym.Env):
             overlapped. 
             
             '''
+            '''
             start_time = random.randint(0+self.bgn_year_margin, 
                                         3.1536e+7-self.end_year_margin)
             episode = (start_time, start_time+self.max_episode_length)
@@ -475,7 +478,35 @@ class BoptestGymEnv(gym.Env):
                         # Try to find a good starting time again
                         start_time = find_start_time()
             # This point is reached only when a good starting point is found
+            
             return start_time
+            '''
+
+            max_attempts = 10000
+
+            for _ in range(max_attempts):
+                start_time = random.randint(
+                    int(0 + self.bgn_year_margin),
+                    int(3.1536e+7 - self.end_year_margin)
+                )
+
+                episode = (start_time, start_time + self.max_episode_length)
+
+                valid = True
+
+                if self.excluding_periods is not None:
+                    for period in self.excluding_periods:
+                        if episode[0] < period[1] and period[0] < episode[1]:
+                            valid = False
+                            break
+
+                if valid:
+                    return start_time
+
+            raise RuntimeError(
+                "No valid start_time found. "
+                "Check excluding_periods, max_episode_length, bgn_year_margin, and end_year_margin."
+            )
         
         # Assign random start_time if it is None
         if self.random_start_time:
@@ -486,6 +517,69 @@ class BoptestGymEnv(gym.Env):
                            json={'start_time':int(self.start_time),
                                  'warmup_period':int(self.warmup_period)}).json()['payload']
         
+
+        # ==============================
+        # Debug: outdoor temperature from initialize res
+        # ==============================
+        '''
+        outdoor_temp_key = "zon_weaSta_reaWeaTDryBul_y"
+
+        try:
+            start_dt = datetime(2021, 1, 1) + timedelta(seconds=int(self.start_time))
+
+            res_time = int(res.get("time", self.start_time))
+            res_dt = datetime(2021, 1, 1) + timedelta(seconds=res_time)
+
+            if outdoor_temp_key in res:
+                tdry_c = float(res[outdoor_temp_key]) - 273.15
+
+                print(
+                    f"[INIT WEATHER] "
+                    f"start_time={int(self.start_time)} ({start_dt.strftime('%m-%d %H:%M:%S')}) | "
+                    f"res_time={res_time} ({res_dt.strftime('%m-%d %H:%M:%S')}) | "
+                    f"TDryBul={tdry_c:.2f} °C"
+                )
+            else:
+                print(
+                    f"[INIT WEATHER] "
+                    f"start_time={int(self.start_time)} ({start_dt.strftime('%m-%d %H:%M:%S')}) | "
+                    f"res_time={res_time} ({res_dt.strftime('%m-%d %H:%M:%S')}) | "
+                    f"{outdoor_temp_key} not found"
+                )
+
+        except Exception as e:
+            print(f"[INIT WEATHER] failed: {e}")
+        '''
+
+        # 초기화 당시의 날씨를 저장
+        outdoor_temp_key = "zon_weaSta_reaWeaTDryBul_y"
+        tdry_k = res.get(outdoor_temp_key)
+
+        self.episode_start_TDryBul_C = (
+            float(tdry_k) - 273.15
+            if tdry_k is not None
+            else None
+        )
+
+        start_sec = int(self.start_time)
+        res_time = int(res.get("time", start_sec))
+
+        start_dt = datetime(2021, 1, 1) + timedelta(seconds=start_sec)
+        res_dt = datetime(2021, 1, 1) + timedelta(seconds=res_time)
+
+        tdry_c = self.episode_start_TDryBul_C
+        temp_text = "N/A" if tdry_c is None else f"{tdry_c:.2f} °C"
+
+        # 출력은 다음 첫 step()까지 미룸
+        self._init_weather_message = (
+            f"[INIT WEATHER] "
+            f"start_time={start_sec} ({start_dt:%m-%d %H:%M:%S}) | "
+            f"res_time={res_time} ({res_dt:%m-%d %H:%M:%S}) | "
+            f"TDryBul={temp_text}"
+        )
+        self._print_init_weather_on_step = True
+            
+
         # Set simulation step
         requests.put('{0}/step/{1}'.format(self.url,self.testid), json={'step':int(self.step_period)})
         
@@ -558,6 +652,11 @@ class BoptestGymEnv(gym.Env):
         since the MDP is normally indefinite by definition. 
 
         '''
+
+        # 초기화 후 첫 step에서만 날씨 출력
+        if getattr(self, "_print_init_weather_on_step", False):
+            print(self._init_weather_message)
+            self._print_init_weather_on_step = False
         
         # Initialize inputs to send through BOPTEST Rest API
         u = {}
@@ -585,7 +684,11 @@ class BoptestGymEnv(gym.Env):
 
         # Optionally we can pass additional info, we are not using that for now
         info = {}
-        
+        ###
+        info["episode_start_time"] = self.start_time
+        info["episode_start_TDryBul_C"] = getattr(self, "episode_start_TDryBul_C", None)
+        ###
+
         # Get observations at the end of this time step
         observations = self.get_observations(res)
         
@@ -611,7 +714,7 @@ class BoptestGymEnv(gym.Env):
             plt.ion()
             self.fig = plt.gcf()
             self.fig.clear()
-            plot_results(self, self.episode_rewards, log_dir=self.log_dir)
+            #plot_results(self, self.episode_rewards, log_dir=self.log_dir)
 
     def close(self):
         pass
@@ -1434,6 +1537,12 @@ class SaveAndTestCallback(BaseCallback):
         self.save_path = os.path.join(log_dir, 'best_model')
         self.best_mean_reward = -np.inf
         self.test = test
+        ###
+        self.episode_count = 0
+        self.episode_start_time = time.time()
+        self.episode_rewards = []
+        self.episode_start_times = []
+        ###
 
     def _init_callback(self) -> None:
         '''
@@ -1491,8 +1600,78 @@ class SaveAndTestCallback(BaseCallback):
                 # Reset the environment just in case that `self.check_freq`
                 # does not coincide with a terminal state
                 self.env.reset() 
+
+        '''
+        ###
+        done = self.locals.get("dones")
         
+        if done is not None and done[0]:
+            if len(self.model.ep_info_buffer) > 0:
+                self.episode_count += 1
+
+                ep_reward = self.model.ep_info_buffer[-1]["r"]
+                self.episode_rewards.append(ep_reward)
+
+                # ⏱️ 시간 계산
+                now = time.time()
+                elapsed = now - self.episode_start_time
+                self.episode_start_time = now
+
+                print(f"[Episode {self.episode_count}] "
+                    f"reward: {ep_reward:.2f}, "
+                    f"steps: {self.num_timesteps}, "
+                    f"time: {elapsed:.2f}s")
+                
+                if self.locals["dones"][0]:
+                    info = self.locals["infos"][0]
+                    sec = info["episode_start_time"]
+
+                    self.episode_start_times.append(sec)
+                    
+                    date = self.sec_to_date(sec)
+                    print(f"[EP START] {date.strftime('%m-%d %H:%M')}") 
+        ###
+        '''
+
+        dones = self.locals.get("dones")
+
+        if dones is not None and dones[0]:
+            info = self.locals["infos"][0]
+
+            # 현재 종료된 에피소드의 결과를 직접 읽기
+            episode = info["episode"]
+            ep_reward = float(episode["r"])
+            ep_steps = int(episode["l"])
+            sec = int(info["episode_start_time"])
+
+            self.episode_count += 1
+            self.episode_rewards.append(ep_reward)
+            self.episode_start_times.append(sec)
+
+            now = time.time()
+            elapsed = now - self.episode_start_time
+            self.episode_start_time = now
+
+            date = self.sec_to_date(sec)
+            tdry = info.get("episode_start_TDryBul_C")
+            temp_text = "N/A" if tdry is None else f"{tdry:.2f} °C"
+
+            print(
+                f"[Episode {self.episode_count}] "
+                f"start={date.strftime('%m-%d %H:%M')} | "
+                f"TDryBul={temp_text} | "
+                f"reward: {ep_reward:.2f}, "
+                f"steps: {ep_steps}, "
+                f"total_steps: {self.num_timesteps}, "
+                f"time: {elapsed:.2f}s"
+            )
+
         return True
+    
+
+    def sec_to_date(self, sec):
+        start = datetime(2021, 1, 1)
+        return start + timedelta(seconds=sec)
 
 if __name__ == "__main__":
     

@@ -1,0 +1,16 @@
+model,seed,status,error
+all,123456,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_all_34_16-1_123456_300k_4_logdir/episode_rewards.csv
+all,199580,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_all_34_16-1_199580_300k_4_logdir/episode_rewards.csv
+all,173827,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_all_34_16-1_173827_300k_4_logdir/episode_rewards.csv
+all,101291,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_all_34_16-1_101291_300k_4_logdir/episode_rewards.csv
+all,362507,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_all_34_16-1_362507_300k_4_logdir/episode_rewards.csv
+sum,123456,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_sum_34_16-1_123456_300k_4_logdir/episode_rewards.csv
+sum,199580,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_sum_34_16-1_199580_300k_4_logdir/episode_rewards.csv
+sum,173827,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_sum_34_16-1_173827_300k_4_logdir/episode_rewards.csv
+sum,101291,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_sum_34_16-1_101291_300k_4_logdir/episode_rewards.csv
+sum,362507,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_sum_34_16-1_362507_300k_4_logdir/episode_rewards.csv
+win,123456,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_win_34_16-1_123456_300k_4_logdir/episode_rewards.csv
+win,199580,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_win_34_16-1_199580_300k_4_logdir/episode_rewards.csv
+win,173827,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_win_34_16-1_173827_300k_4_logdir/episode_rewards.csv
+win,101291,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_win_34_16-1_101291_300k_4_logdir/episode_rewards.csv
+win,362507,ERROR,파일을 찾을 수 없습니다: D:/dev-code/boptest-gym/examples/agents/SAC_D_3e05_air_seoul_win_34_16-1_362507_300k_4_logdir/episode_rewards.csv
