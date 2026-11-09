@@ -236,9 +236,9 @@ def train_RL(algorithm           = 'SAC',
         observations=OrderedDict([
                             ('time', (0, 604800)),
                             ('zon_reaTRooAir_y', (280., 310.)),
-                            ('zon_reaCO2RooAir_y', (400., 2000.)),
                             ('TDryBul', (250., 315.)),
                             ('HDirNor', (0., 1000.)),
+                            ('HGloHor', (0., 1200.)),  # W/m2; normalization bounds, not clipping limits
                             #('PriceElectricPowerHighlyDynamic', (-0.4, 0.4)),
                             ('PriceElectricPowerDynamic', (-0.4, 0.4)),
                             ('LowerSetp[1]', (280., 310.)),
