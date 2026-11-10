@@ -68,8 +68,8 @@ class BoptestGymEnv(gym.Env):
         observations: dictionary
             Dictionary mapping observation keys to a tuple with the lower
             and upper bound of each observation. Observation keys must 
-            belong either to the set of measurements or to the set of 
-            forecasting variables of the BOPTEST test case. Contrary to 
+            belong to the measurements, forecasting variables, or local
+            calendar features (`time`, `year_sin`, `year_cos`). Contrary to
             the actions, the expected minimum and maximum values of the 
             measurement and forecasting variables are not provided from 
             the BOPTEST framework, although they are still relevant here 
@@ -77,8 +77,10 @@ class BoptestGymEnv(gym.Env):
             bounds need to be provided by the user. 
             If `time` is included as an observation, the time in seconds
             will be passed to the agent. This is the remainder time from 
-            the beginning of the episode and for periods of the length
-            specified in the upper bound of the time feature. 
+            the beginning of the year, modulo the upper bound of the
+            time feature. `year_sin` and `year_cos` encode the current
+            simulation time on a fixed 365-day cycle, with bounds (-1, 1).
+            They occur once each, without regressive or predictive copies.
         reward: list
             List with string indicating the reward column name in a replay
             buffer of data in case the algorithm is going to use pretraining
@@ -199,9 +201,16 @@ class BoptestGymEnv(gym.Env):
                      'upper bounds of each variable. '\
                      'Variable "{}" does not follow this format. '.format(obs))
         
-        # Assert that observations belong either to measurements or to predictive variables
+        # Calendar features are computed locally from the simulation clock.
+        self.annual_time_vars = [name for name in ('year_sin', 'year_cos')
+                                 if name in observations]
+        for name in self.annual_time_vars:
+            if tuple(observations[name]) != (-1., 1.):
+                raise ValueError('{} requires bounds (-1., 1.)'.format(name))
+
+        # Assert that observations are calendar features, measurements or forecasts.
         for obs in self.observations:
-            if not (obs=='time' or obs in self.all_measurement_vars.keys() or obs in self.all_predictive_vars.keys()):
+            if not (obs=='time' or obs in self.annual_time_vars or obs in self.all_measurement_vars.keys() or obs in self.all_predictive_vars.keys()):
                 raise ReferenceError(\
                  '"{0}" does not belong to neither the set of '\
                  'test case measurements nor to the set of '\
@@ -225,7 +234,12 @@ class BoptestGymEnv(gym.Env):
             self.lower_obs_bounds.extend([observations['time'][0]])
             self.upper_obs_bounds.extend([observations['time'][1]])
         
-        # Define lower and upper bounds for observations. Always start observation space by measurements
+        # Annual features occur once, without history or forecast expansion.
+        self.observations.extend(self.annual_time_vars)
+        self.lower_obs_bounds.extend([-1.] * len(self.annual_time_vars))
+        self.upper_obs_bounds.extend([1.] * len(self.annual_time_vars))
+
+        # Measurements follow the calendar features.
         self.observations.extend(self.measurement_vars)
         self.lower_obs_bounds.extend([observations[obs][0] for obs in self.measurement_vars])
         self.upper_obs_bounds.extend([observations[obs][1] for obs in self.measurement_vars])
@@ -839,6 +853,14 @@ class BoptestGymEnv(gym.Env):
             # Time is always the first feature in observations
             observations.append(res['time']%self.upper_obs_bounds[0]) 
         
+        # BOPTEST uses seconds since Jan 1 in a 365-day weather year.
+        # Use the returned simulation time, not elapsed episode time or weekly time.
+        if self.annual_time_vars:
+            year_seconds = 365 * 24 * 3600
+            phase = 2. * np.pi * (res['time'] % year_seconds) / year_seconds
+            annual_values = {'year_sin': np.sin(phase), 'year_cos': np.cos(phase)}
+            observations.extend(annual_values[name] for name in self.annual_time_vars)
+
         # Get measurements at the end of the simulation step
         for obs in self.measurement_vars:
             observations.append(res[obs])

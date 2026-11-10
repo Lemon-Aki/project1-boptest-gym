@@ -235,10 +235,13 @@ def train_RL(algorithm           = 'SAC',
         actions = ['fcu_oveFan_u', 'fcu_oveTSup_u'] #12~40도
         observations=OrderedDict([
                             ('time', (0, 604800)),
+                            # Current annual position; computed locally, no history/forecast copies.
+                            ('year_sin', (-1., 1.)),
+                            ('year_cos', (-1., 1.)),
                             ('zon_reaTRooAir_y', (280., 310.)),
-                            ('zon_reaCO2RooAir_y', (400., 2000.)),
                             ('TDryBul', (250., 315.)),
                             ('HDirNor', (0., 1000.)),
+                            ('HGloHor', (0., 1200.)),  # W/m2; normalization bounds, not clipping limits
                             #('PriceElectricPowerHighlyDynamic', (-0.4, 0.4)),
                             ('PriceElectricPowerDynamic', (-0.4, 0.4)),
                             ('LowerSetp[1]', (280., 310.)),
